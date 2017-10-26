@@ -134,6 +134,47 @@ class Main extends Component {
     return newObj;
   }
 
+  findDifferentKeys(obj) {
+    chrome.storage.local.get('diffConfigs', data => {
+      let currentConfigs = Object.keys(obj);
+      let oldConfigs = data.diffConfigs;
+      if (oldConfigs == null) {
+        chrome.storage.local.set({
+          diffConfigs: currentConfigs
+        });
+        return [];
+      }
+
+      console.log(this.getArrayDifferences(currentConfigs, oldConfigs));
+      chrome.storage.local.set({
+        diffConfigs: currentConfigs
+      });
+    });
+
+  }
+
+  getArrayDifferences(a1, a2) {
+    var a = [], diff = [];
+
+    for (var i = 0; i < a1.length; i++) {
+      a[a1[i]] = true;
+    }
+
+    for (var i = 0; i < a2.length; i++) {
+      if (a[a2[i]]) {
+        delete a[a2[i]];
+      } else {
+        a[a2[i]] = true;
+      }
+    }
+
+    for (var k in a) {
+      diff.push(k);
+    }
+
+    return diff;
+  }
+
   getUserConfigs() {
     return this.state.userConfigs;
   }
@@ -144,6 +185,7 @@ class Main extends Component {
 
   renderConfigs() {
     let fbConfigs = this.state.fbConfigs;
+    let diffConfigs = this.state.diffConfigs;
     let userConfigs = this.state.userConfigs;
 
     let rowViews = [];
@@ -212,6 +254,7 @@ class Main extends Component {
           document.body.classList.remove('no-config');
           this.setState({
             fbConfigs: this.sortObjectByKeys(request.fbConfigs),
+            diffConfigs: this.findDifferentKeys(request.fbConfigs),
             userConfigs: this.sortObjectByKeys(data.userConfigs)
           });
         });
